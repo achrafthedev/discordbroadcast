@@ -24,8 +24,8 @@ A powerful Discord bot to broadcast messages via DM to server members with advan
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/discord-broadcast-bot.git
-cd discord-broadcast-bot
+git clone https://github.com/achrafthedev/discordbroadcast.git
+cd discordbroadcast
 ```
 
 ### Install Dependencies
@@ -95,4 +95,4 @@ Feel free to fork the repository and submit pull requests to improve this bot.
 
 ## Issues
 
-If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/yourusername/discordbroadcast/issues).
+If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/achrafthedev/discordbroadcast/issues).
