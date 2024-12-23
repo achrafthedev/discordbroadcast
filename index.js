@@ -3,7 +3,6 @@ require('dotenv').config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
 
-// Register the slash commands
 const commands = [
     {
         name: 'broadcast',
@@ -42,7 +41,6 @@ const commands = [
     },
 ];
 
-
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 (async () => {
@@ -69,7 +67,6 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
     if (interaction.commandName === 'broadcast') {
-        // Check if the user has Administrator permissions
         if (!interaction.member.permissions.has('Administrator')) {
             return interaction.reply({
                 content: '🚫 You do not have permission to use this command.',
@@ -77,14 +74,13 @@ client.on('interactionCreate', async (interaction) => {
             });
         }
 
-        // Get command options
         const broadcastMessage = interaction.options.getString('message');
         const imageUrl = interaction.options.getString('image');
         const filter = interaction.options.getString('filter');
         const role = interaction.options.getRole('role');
 
         const embed = new EmbedBuilder()
-            .setTitle('📢 - Broadcast Message!')
+            .setTitle('📢 Broadcast Message')
             .setDescription(broadcastMessage)
             .setColor(0x00AE86)
             .setTimestamp()
@@ -97,7 +93,6 @@ client.on('interactionCreate', async (interaction) => {
         try {
             const members = await interaction.guild.members.fetch();
 
-            // Apply filters
             let filteredMembers;
             if (filter === 'online') {
                 filteredMembers = members.filter((member) => member.presence?.status === 'online');
@@ -113,7 +108,6 @@ client.on('interactionCreate', async (interaction) => {
                 filteredMembers = members.filter((member) => !member.user.bot);
             }
 
-            // Notify the user about the broadcast start
             await interaction.reply({
                 content: `📢 Broadcast started! Sending messages to ${filteredMembers.size} members...`,
                 ephemeral: true,
@@ -126,10 +120,7 @@ client.on('interactionCreate', async (interaction) => {
                 try {
                     await member.send({ embeds: [embed] });
                     successCount++;
-                    await interaction.followUp({
-                        content: `✅ Sent to ${member.user.tag} (${successCount}/${filteredMembers.size})`,
-                        ephemeral: true,
-                    });
+                    console.log(`✅ Sent to ${member.user.tag} (${successCount}/${filteredMembers.size})`);
                 } catch (error) {
                     console.error(`❌ Could not DM ${member.user.tag}: ${error.message}`);
                     failureCount++;
@@ -137,10 +128,7 @@ client.on('interactionCreate', async (interaction) => {
                 await delay(1000); // Delay of 1 second between messages
             }
 
-            await interaction.followUp({
-                content: `✅ Broadcast complete! Success: ${successCount}, Failed: ${failureCount}.`,
-                ephemeral: true,
-            });
+            console.log(`Broadcast complete! Success: ${successCount}, Failed: ${failureCount}.`);
         } catch (error) {
             console.error('❌ Error during broadcast:', error);
             await interaction.reply({
