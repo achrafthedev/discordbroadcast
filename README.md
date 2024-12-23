@@ -95,4 +95,4 @@ Feel free to fork the repository and submit pull requests to improve this bot.
 
 ## Issues
 
-If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/yourusername/discord-broadcast-bot/issues).
+If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/yourusername/discordbroadcast/issues).
