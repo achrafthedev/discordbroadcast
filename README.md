@@ -22,13 +22,14 @@ Broadcast a message to all server members via DM.
 ```bash
 /broadcast message: Hello, everyone! Here's an important announcement. image: https://example.com/image.png
 ```
-/broadcast-test
+### /broadcast-test
 Test your broadcast by sending the message only to yourself via DM.
 
-Options:
-message (required): The message content to test.
-image (optional): A URL to an image to include in the test.
-Example:
+#### Options:
+- `message` *(required)*: The message content to broadcast.
+- `image` *(optional)*: A URL to an image to include in the broadcast.
+
+#### Example:
 ```bash
 /broadcast-test message: This is a test message. image: https://example.com/test-image.png
 ```
