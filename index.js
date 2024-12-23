@@ -1,47 +1,47 @@
 const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
 
 // Register the slash commands
 const commands = [
     {
         name: 'broadcast',
-        description: 'Send a broadcast message to all server members via DM',
+        description: 'Send a broadcast message to server members via DM',
         options: [
             {
                 name: 'message',
                 type: 3, // String type
                 description: 'The message to broadcast',
-                required: true,
+                required: true, // Required option
+            },
+            {
+                name: 'filter',
+                type: 3, // String type
+                description: 'Filter recipients: online, role, or all',
+                required: true, // Required option
+                choices: [
+                    { name: 'All Members', value: 'all' },
+                    { name: 'Online Members', value: 'online' },
+                    { name: 'Members with a Role', value: 'role' },
+                ],
             },
             {
                 name: 'image',
                 type: 3, // String type
                 description: 'URL of the image to include in the broadcast',
-                required: false,
-            },
-        ],
-    },
-    {
-        name: 'broadcast-test',
-        description: 'Test a broadcast message by sending it only to yourself',
-        options: [
-            {
-                name: 'message',
-                type: 3, // String type
-                description: 'The message to test',
-                required: true,
+                required: false, // Optional option
             },
             {
-                name: 'image',
-                type: 3, // String type
-                description: 'URL of the image to include in the test',
-                required: false,
+                name: 'role',
+                type: 8, // Role type
+                description: 'Role to filter (only required for role filter)',
+                required: false, // Optional option
             },
         ],
     },
 ];
+
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
@@ -58,94 +58,97 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     }
 })();
 
-// When the bot is ready
 client.once('ready', () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// Handle slash command interactions
+// Helper function to introduce delays
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    if (interaction.commandName === 'broadcast' || interaction.commandName === 'broadcast-test') {
-        // Check if the user has Administrator permissions for broadcast (not needed for test)
-        if (
-            interaction.commandName === 'broadcast' &&
-            !interaction.member.permissions.has('Administrator')
-        ) {
+    if (interaction.commandName === 'broadcast') {
+        // Check if the user has Administrator permissions
+        if (!interaction.member.permissions.has('Administrator')) {
             return interaction.reply({
                 content: '🚫 You do not have permission to use this command.',
                 ephemeral: true,
             });
         }
 
-        // Get the message and optional image URL from the command options
+        // Get command options
         const broadcastMessage = interaction.options.getString('message');
         const imageUrl = interaction.options.getString('image');
+        const filter = interaction.options.getString('filter');
+        const role = interaction.options.getRole('role');
 
-        // Create an embed for the broadcast message
         const embed = new EmbedBuilder()
-            .setTitle('📢 Broadcast Message')
+            .setTitle('📢 - Broadcast Message!')
             .setDescription(broadcastMessage)
             .setColor(0x00AE86)
             .setTimestamp()
             .setFooter({ text: `Sent by ${interaction.user.tag}` });
 
-        // Add the image to the embed if an image URL is provided
         if (imageUrl) {
             embed.setImage(imageUrl);
         }
 
-        if (interaction.commandName === 'broadcast-test') {
-            // Send the test message only to the command user
-            try {
-                await interaction.user.send({ embeds: [embed] });
-                await interaction.reply({
-                    content: '✅ Test broadcast message sent to you via DM!',
-                    ephemeral: true,
-                });
-            } catch (error) {
-                console.error('❌ Error sending test message:', error);
-                await interaction.reply({
-                    content: '❌ Failed to send the test broadcast message. Please check your DM settings.',
-                    ephemeral: true,
-                });
-            }
-        } else if (interaction.commandName === 'broadcast') {
-            try {
-                // Fetch all members in the guild
-                const members = await interaction.guild.members.fetch();
+        try {
+            const members = await interaction.guild.members.fetch();
 
-                let successCount = 0;
-                let failureCount = 0;
-
-                // Send the embed message to each non-bot member
-                for (const member of members.values()) {
-                    if (!member.user.bot) {
-                        try {
-                            await member.send({ embeds: [embed] });
-                            successCount++;
-                        } catch (error) {
-                            console.error(`❌ Could not DM ${member.user.tag}: ${error.message}`);
-                            failureCount++;
-                        }
-                    }
+            // Apply filters
+            let filteredMembers;
+            if (filter === 'online') {
+                filteredMembers = members.filter((member) => member.presence?.status === 'online');
+            } else if (filter === 'role') {
+                if (!role) {
+                    return interaction.reply({
+                        content: '❌ You must specify a role for the "role" filter.',
+                        ephemeral: true,
+                    });
                 }
-
-                // Reply to the admin with the broadcast result
-                await interaction.reply(
-                    `✅ Broadcast complete! Success: ${successCount}, Failed: ${failureCount}.`
-                );
-            } catch (error) {
-                console.error('❌ Error broadcasting message:', error);
-                await interaction.reply({
-                    content: '❌ Failed to broadcast the message. Please try again later.',
-                    ephemeral: true,
-                });
+                filteredMembers = members.filter((member) => member.roles.cache.has(role.id));
+            } else {
+                filteredMembers = members.filter((member) => !member.user.bot);
             }
+
+            // Notify the user about the broadcast start
+            await interaction.reply({
+                content: `📢 Broadcast started! Sending messages to ${filteredMembers.size} members...`,
+                ephemeral: true,
+            });
+
+            let successCount = 0;
+            let failureCount = 0;
+
+            for (const member of filteredMembers.values()) {
+                try {
+                    await member.send({ embeds: [embed] });
+                    successCount++;
+                    await interaction.followUp({
+                        content: `✅ Sent to ${member.user.tag} (${successCount}/${filteredMembers.size})`,
+                        ephemeral: true,
+                    });
+                } catch (error) {
+                    console.error(`❌ Could not DM ${member.user.tag}: ${error.message}`);
+                    failureCount++;
+                }
+                await delay(1000); // Delay of 1 second between messages
+            }
+
+            await interaction.followUp({
+                content: `✅ Broadcast complete! Success: ${successCount}, Failed: ${failureCount}.`,
+                ephemeral: true,
+            });
+        } catch (error) {
+            console.error('❌ Error during broadcast:', error);
+            await interaction.reply({
+                content: '❌ An error occurred during the broadcast. Please try again later.',
+                ephemeral: true,
+            });
         }
     }
 });
 
-// Login to Discord
 client.login(process.env.TOKEN);
