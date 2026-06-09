@@ -1,98 +1,110 @@
+# Discord Broadcast Bot & Admin Console
 
-# Discord Broadcast Bot
+A modernized, high-performance Discord message broadcasting solution featuring a premium web-based administrative console. Broadcast customized direct messages (DMs) to your server members with advanced targeting filters, speed configuration, and real-time event logging.
 
-A powerful Discord bot to broadcast messages via DM to server members with advanced filtering options. Ideal for server administrators who need to communicate directly with specific groups of members.
+---
 
-## Features
+## ✨ Key Features
 
-- **Broadcast Messages**: Send messages via DM to all server members or filtered groups.
-- **Filters**:
-  - All Members
-  - Online Members
-  - Members with a Specific Role
-- **Embed Support**: Include a title, description, and optional image in your messages.
-- **Feedback**: Real-time feedback after every message sent.
-- **Graceful Error Handling**: Skips members with closed DMs or other issues and logs errors.
+- **Modern ESModules Stack**: Built using Node.js ESModules and the latest stable `discord.js` v14 API.
+- **Premium Web Dashboard**: A glassmorphic web administration panel served directly from the bot (`http://localhost:3000`).
+- **Dynamic Filter Targeting**:
+  - **All Members**: Deliver to every user in the server (excluding bots).
+  - **Online Members**: Targets only active online members to maximize outreach engagement.
+  - **Role-based Filtering**: Dynamically fetches your guild roles and targets specific groups of members.
+- **Real-Time Monitoring (SSE)**: Streams delivery progress, success ratios, failure rates, and live terminal logs directly to your browser via Server-Sent Events.
+- **Queue Controls**: Includes a "Cancel" action to instantly abort ongoing broadcasts.
+- **Adjustable Throttling**: Configure the interval delay between messages (from 1s up to 10s) to fit your server size and comply with Discord rate-limiting guidelines.
+- **Image Embed Support**: Attach rich visual images to your DM announcements.
+- **Slash Commands**: Still includes native Discord support with the `/broadcast` command.
 
-## Prerequisites
+---
 
-- **Node.js**: Install [Node.js](https://nodejs.org/) (v16.6.0 or higher).
-- **Discord Developer Account**: Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications).
+## 🛠️ Prerequisites & Setup
 
-## Setup
+### 1. Developer Portal Configuration (Critical)
+To list members and inspect online statuses, your bot client requires **Privileged Gateway Intents**.
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Choose your Bot Application and navigate to the **Bot** tab on the left menu.
+3. Scroll down to the **Privileged Gateway Intents** section.
+4. Toggle **ON** the following settings:
+   - **Presence Intent** (needed for online checks)
+   - **Server Members Intent** (needed to iterate guild list and send DMs)
+5. Save your changes.
 
-### Clone the Repository
-
-```bash
-git clone https://github.com/achrafthedev/discordbroadcast.git
-cd discordbroadcast
-```
-
-### Install Dependencies
+### 2. Project Installation
+Clone this repository and install the modernized dependencies:
 
 ```bash
 npm install
 ```
 
-### Create a `.env` File
+### 3. Environment Configuration
+Create a `.env` file in the root of the project:
 
-Create a `.env` file in the root directory and add the following:
-
+```env
+TOKEN=your-discord-bot-token
+CLIENT_ID=your-bot-client-application-id
+GUILD_ID=your-target-discord-guild-id
+PORT=3000
 ```
-TOKEN=your-bot-token
-CLIENT_ID=your-bot-client-id
-GUILD_ID=your-server-id
-```
 
-Replace the placeholders with:
-- `your-bot-token`: Found in the Discord Developer Portal under "Bot".
-- `your-bot-client-id`: Found in the "OAuth2" section of your application.
-- `your-server-id`: Right-click your server name in Discord (with Developer Mode enabled) and copy the ID.
+- **TOKEN**: Found under the "Bot" settings page in the Developer Portal.
+- **CLIENT_ID**: Located under "General Information" (Application ID) or "OAuth2".
+- **GUILD_ID**: Right-click your server's name in Discord (ensure Discord "Developer Mode" is enabled) and click **Copy Server ID**.
+- **PORT**: Configures the port number for the Web Dashboard server (defaults to 3000).
 
-## Usage
+---
 
-### Start the Bot
+## 🚀 Running the Bot
 
-Run the following command to start the bot:
+### Standard Mode
+Start the server using standard npm scripts:
 
 ```bash
-node index.js
+# Production Run
+npm start
+
+# Development watch mode
+npm run dev
 ```
 
-### Slash Commands
+Once running, access the dashboard at:
+👉 **[http://localhost:3000](http://localhost:3000)**
 
-#### `/broadcast`
+### 🐳 Running with Docker
+You can easily build and run the bot inside a Docker container:
 
-Broadcast a message to server members.
+```bash
+# Build the Docker image
+docker build -t discord-broadcast-bot .
 
-**Options**:
-- `message` *(required)*: The message content to broadcast.
-- `filter` *(required)*: Choose between `all`, `online`, or `role`.
-- `image` *(optional)*: URL to an image to include in the broadcast.
-- `role` *(optional)*: The role to filter by (only required if `filter` is `role`).
+# Run the container (injecting your .env file)
+docker run -d --name discord-broadcast -p 3000:3000 --env-file .env discord-broadcast-bot
+```
 
-**Examples**:
-- Broadcast to all members:
-  ```
-  /broadcast message: Hello, everyone! filter: all
-  ```
-- Broadcast to online members only:
-  ```
-  /broadcast message: Hello, online members! filter: online
-  ```
-- Broadcast to members with a specific role:
-  ```
-  /broadcast message: Hello, role members! filter: role role: @RoleName
-  ```
+---
 
-## License
+## 🖥️ Web Dashboard Overview
 
-This project is licensed under the MIT License.
+The Web Dashboard divides administrative controls into two main segments:
+1. **New Broadcast Creator (Left)**: Write your announcement text, paste an optional image attachment URL, choose target filter rules, and drag the interval speed slider.
+2. **Live Monitor & Console (Right)**: Shows current status (`IDLE` / `BROADCASTING` / `COMPLETED` / `CANCELLED`), active success counters, progress percent, a red "Cancel" abort trigger, and a detailed terminal log showing specific user delivery feedback.
 
-## Contributing
+---
 
-Feel free to fork the repository and submit pull requests to improve this bot.
+## 💬 Slash Commands
 
-## Issues
+You can trigger a broadcast directly from the Discord interface using:
 
-If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/achrafthedev/discordbroadcast/issues).
+```
+/broadcast [message] [filter: all|online|role] [image] [role]
+```
+
+*Note: Slash commands require administrator permissions within your server.*
+
+---
+
+## ⚖️ License & Contribution
+
+Distributed under the MIT License. Feel free to open issues or file pull requests on GitHub.
