@@ -12,7 +12,7 @@
   "license": "MIT",
   "description": "Discord Broadcast Bot with modern web dashboard interface",
   "dependencies": {
-    "discord.js": "^14.16.3",
+    "discord.js": "^14.27.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2"
   }
